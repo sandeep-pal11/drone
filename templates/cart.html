@@ -1,0 +1,176 @@
+{% include "header.html" %}
+
+<main class="main__content_wrapper">
+
+    <!-- Start breadcrumb section -->
+    <section class="breadcrumb__section breadcrumb__bg">
+        <div class="container">
+            <div class="row row-cols-1">
+                <div class="col">
+                    <div class="breadcrumb__content">
+                        <h1 class="breadcrumb__content--title mb-10">Shopping Cart</h1>
+                        <ul class="breadcrumb__content--menu d-flex">
+                            <li class="breadcrumb__content--menu__items"><a href="/">Home</a></li>
+                            <li class="breadcrumb__content--menu__items"><span class="text__secondary">Shopping Cart</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- End breadcrumb section -->
+
+    <!-- cart section start -->
+    <section class="cart__section section--padding">
+        <div class="container-fluid">
+            <div class="cart__section--inner">
+                <form action="#"> 
+                    <h2 class="cart__title mb-40">Shopping Cart</h2>
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="cart__table">
+                                <table class="cart__table--inner">
+                                    <thead class="cart__table--header">
+                                        <tr class="cart__table--header__items">
+                                            <th class="cart__table--header__list">Product</th>
+                                            <th class="cart__table--header__list">Price</th>
+                                            <th class="cart__table--header__list">Quantity</th>
+                                            <th class="cart__table--header__list">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="cart__table--body" id="cart-items">
+                                        <!-- JavaScript will populate items -->
+                                    </tbody>
+                                </table> 
+                                <div class="continue__shopping d-flex justify-content-between">
+                                    <a class="continue__shopping--link" href="/shop">Continue shopping</a>
+                                    <button class="continue__shopping--clear" type="button" id="clear-cart">Clear Cart</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="cart__summary border-radius-10">
+                                <div class="cart__summary--total mb-20">
+                                    <table class="cart__summary--total__table">
+                                        <tbody>
+                                            <tr class="cart__summary--total__list">
+                                                <td class="cart__summary--total__title text-left">SUBTOTAL</td>
+                                                <td class="cart__summary--amount text-right" id="subtotal">£0.00</td>
+                                            </tr>
+                                            <tr class="cart__summary--total__list">
+                                                <td class="cart__summary--total__title text-left">GRAND TOTAL</td>
+                                                <td class="cart__summary--amount text-right" id="grand-total">£0.00</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="cart__summary--footer">
+                                    <p class="cart__summary--footer__desc">Shipping & taxes calculated at checkout</p>
+                                    <ul class="d-flex justify-content-between">
+                                        <li><button class="cart__summary--footer__btn primary__btn cart" type="submit">Update Cart</button></li>
+                                        <li><a class="cart__summary--footer__btn primary__btn checkout" href="/checkout">Check Out</a></li>
+                                    </ul>
+                                </div>
+                            </div> 
+                        </div>
+                    </div> 
+                </form> 
+            </div>
+        </div>     
+    </section>
+    <!-- cart section end -->
+
+</main>
+
+{% include "footer.html" %}
+
+<script>
+    let cart = JSON.parse(localStorage.getItem('cart')) || {};
+
+    function updateCartCount() {
+        let totalItems = 0;
+        for (let key in cart) {
+            totalItems += cart[key].quantity;
+        }
+        let cartCounter = document.getElementById('cart');
+        if (cartCounter) cartCounter.textContent = totalItems;
+    }
+
+    function updateCartDisplay() {
+        let cartItemsHTML = '';
+        let subtotal = 0;
+
+        for (let productId in cart) {
+            let product = cart[productId];
+            let price = parseFloat(product.price.toString().replace(/[^0-9.]/g, '')) || 0;
+            let totalPrice = price * product.quantity;
+            subtotal += totalPrice;
+
+            cartItemsHTML += `
+                <tr class="cart__table--body__items">
+                    <td class="cart__table--body__list">
+                        <div class="cart__product d-flex align-items-center">
+                            <button class="cart__remove--btn" onclick="removeFromCart('${productId}')">
+                                <svg fill="currentColor" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="16px" height="16px">
+                                    <path d="M 4.707 3.293 L 3.293 4.707 10.586 12 3.293 19.293 4.707 20.707 12 13.414 19.293 20.707 20.707 19.293 13.414 12 20.707 4.707 19.293 3.293 12 10.586z"/>
+                                </svg>
+                            </button>
+                            <div class="cart__thumbnail">
+                                <a href="/productdetails"><img class="border-radius-5" src="${product.image}" alt="${product.name}"></a>
+                            </div>
+                            <div class="cart__content">
+                                <h3 class="cart__content--title h4"><a href="/productdetails">${product.name}</a></h3>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="cart__table--body__list">
+                        <span class="cart__price">£${price.toFixed(2)}</span>
+                    </td>
+                    <td class="cart__table--body__list">
+                        <div class="quantity__box">
+                            <button type="button" class="quantity__value decrease" onclick="updateQuantity('${productId}', -1)">-</button>
+                            <input type="number" class="quantity__number" value="${product.quantity}" readonly />
+                            <button type="button" class="quantity__value increase" onclick="updateQuantity('${productId}', 1)">+</button>
+                        </div>
+                    </td>
+                    <td class="cart__table--body__list">
+                        <span class="cart__price end">£${totalPrice.toFixed(2)}</span>
+                    </td>
+                </tr>
+            `;
+        }
+
+        document.getElementById('cart-items').innerHTML = cartItemsHTML;
+        document.getElementById('subtotal').textContent = `£${subtotal.toFixed(2)}`;
+        document.getElementById('grand-total').textContent = `£${subtotal.toFixed(2)}`;
+    }
+
+    function updateQuantity(productId, change) {
+        if (cart[productId]) {
+            cart[productId].quantity += change;
+            if (cart[productId].quantity <= 0) {
+                delete cart[productId];
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+            updateCartDisplay();
+        }
+    }
+
+    function removeFromCart(productId) {
+        delete cart[productId];
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCartCount();
+        updateCartDisplay();
+    }
+
+    document.getElementById('clear-cart').addEventListener('click', function () {
+        localStorage.removeItem('cart');
+        cart = {};
+        updateCartCount();
+        updateCartDisplay();
+    });
+
+    updateCartCount();
+    updateCartDisplay();
+</script>
